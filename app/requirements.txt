@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+openai
+azure-search-documents
+azure-cosmos
+python-dotenv
+httpx
+jinja2
+requests

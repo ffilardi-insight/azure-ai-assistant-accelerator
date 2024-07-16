@@ -1,0 +1,390 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "AI Assistant API",
+        "description": "AI Assistant API backend services",
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "https://{apim-resource-name}.azure-api.net/assistant/v1",
+            "variables": {
+                "apim-resource-name": {
+                    "default": "your-resource-name"
+                }
+            }
+        }
+    ],
+    "paths": {
+        "/api/chat": {
+            "post": {
+                "summary": "Chat completions",
+                "description": "Chat completions API endpoint",
+                "operationId": "chat",
+                "requestBody": {
+                    "description": "Chat request payload",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatRequest"
+                            },
+                            "example": {
+                                "session_id": "string",
+                                "user_id": "string",
+                                "user_name": "string",
+                                "user_prompt": "string"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Chat response payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatResponse"
+                                },
+                                "example": {
+                                    "assistant_response": "string",
+                                    "response_id": "string",
+                                    "followup_questions": {
+                                        "q1": "string",
+                                        "q2": "string",
+                                        "q3": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Chat response entity error payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatResponseEntityError"
+                                },
+                                "example": {
+                                    "detail": [
+                                        {
+                                            "type": "string_type",
+                                            "loc": [
+                                                "body",
+                                                "user_name"
+                                            ],
+                                            "msg": "Input should be a valid string",
+                                            "input": 123
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Chat response internal error payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatResponseInternalError"
+                                },
+                                "example": {
+                                    "reason": "Error in chat.run: 'MessageBuilder' object has no attribute 'abc'",
+                                    "source": {
+                                        "url": "http://localhost:8000/api/chat",
+                                        "method": "POST"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/feedback": {
+            "post": {
+                "summary": "User feedback",
+                "description": "User feedback API endpoint",
+                "operationId": "feedback",
+                "requestBody": {
+                    "description": "Feedback request payload",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FeedbackRequest"
+                            },
+                            "example": {
+                                "id": "string",
+                                "session_id": "string",
+                                "feedback_rating": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Feedback response payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeedbackResponse"
+                                },
+                                "example": {
+                                    "status": "Feedback updated successfully"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Feedback response entity error payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeedbackResponseEntityError"
+                                },
+                                "example": {
+                                    "detail": [
+                                        {
+                                            "type": "missing",
+                                            "loc": [
+                                                "body",
+                                                "session_id"
+                                            ],
+                                            "msg": "Field required",
+                                            "input": {
+                                                "id": "d8e78ad9-ef00-4038-99f6-0d3c461d26b5",
+                                                "session_": "session001",
+                                                "feedback_rating": 1
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Feedback response internal error payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeedbackResponseInternalError"
+                                },
+                                "example": {
+                                    "reason": "Database error in feedback.run: Not Found (404)",
+                                    "source": {
+                                        "url": "http://localhost:8000/api/feedback",
+                                        "method": "POST"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ChatRequest": {
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    },
+                    "user_name": {
+                        "type": "string"
+                    },
+                    "user_prompt": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ChatResponse": {
+                "type": "object",
+                "properties": {
+                    "assistant_response": {
+                        "type": "string"
+                    },
+                    "response_id": {
+                        "type": "string"
+                    },
+                    "followup_questions": {
+                        "type": "object",
+                        "properties": {
+                            "q1": {
+                                "type": "string"
+                            },
+                            "q2": {
+                                "type": "string"
+                            },
+                            "q3": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "ChatResponseEntityError": {
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "type",
+                                "loc",
+                                "msg",
+                                "input"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                },
+                                "loc": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "msg": {
+                                    "type": "string"
+                                },
+                                "input": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "ChatResponseInternalError": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string"
+                            },
+                            "method": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "FeedbackRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "session_id": {
+                        "type": "string"
+                    },
+                    "feedback_rating": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "FeedbackResponseInternalError": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string"
+                            },
+                            "method": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "FeedbackResponseEntityError": {
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "type",
+                                "loc",
+                                "msg",
+                                "input"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                },
+                                "loc": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "msg": {
+                                    "type": "string"
+                                },
+                                "input": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "session_": {
+                                            "type": "string"
+                                        },
+                                        "feedback_rating": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "FeedbackResponse": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "apiKeyHeader": {
+                "type": "apiKey",
+                "name": "Ocp-Apim-Subscription-Key",
+                "in": "header"
+            },
+            "apiKeyQuery": {
+                "type": "apiKey",
+                "name": "subscription-key",
+                "in": "query"
+            }
+        }
+    },
+    "security": [
+        {
+            "apiKeyHeader": []
+        },
+        {
+            "apiKeyQuery": []
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+name: ai-assistant
+services:
+  app-core:
+    project: app/
+    language: py
+    host: appservice
+pipeline:
+  variables:
+  secrets:

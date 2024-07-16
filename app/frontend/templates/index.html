@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://kit.fontawesome.com/039f4a02e9.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="side-panel">
+            <h2>Settings</h2>
+            <form id="user-form">
+                <label for="name">User Name:</label>
+                <input type="text" id="name" name="name" required><br><br>
+
+                <label for="user_id">User ID:</label>
+                <input type="text" id="user_id" name="user_id" readonly class="readonly"><br><br>
+
+                <label for="session_id">Session ID:</label>
+                <input type="text" id="session_id" name="session_id" readonly class="readonly"><br><br>
+
+                <label for="total_tokens">Total Tokens:</label>
+                <input type="text" id="total_tokens" name="total_tokens" readonly class="readonly"><br><br>
+
+                <label for="model_name">Model Name:</label>
+                <input type="text" id="model_name" name="model_name" readonly class="readonly"><br><br>
+
+                <button type="submit">Start New Session</button>
+            </form>
+        </div>
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>AI Assistant</h1>
+            </div>
+            <div class="chat-window" id="chat-window">
+                <!-- Chat messages will be appended here dynamically -->
+            </div>
+            <div class="followup-container" id="followup-container">
+                <div class="followup-questions" id="followup-questions">
+                    <!-- Follow-up questions will be loaded here dynamically -->
+                </div>
+            </div>
+            <div class="chat-input">
+                <textarea id="message" placeholder="Type your message..." rows="3"></textarea>
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            generateUserId();
+            generateSessionId();
+        });
+
+        document.getElementById('send-button').addEventListener('click', sendMessage);
+        document.getElementById('user-form').addEventListener('submit', startNewSession);
+
+        function generateUserId() {
+            const userIdInput = document.getElementById('user_id');
+            userIdInput.value = crypto.randomUUID();
+        }
+
+        function generateSessionId() {
+            const sessionIdInput = document.getElementById('session_id');
+            sessionIdInput.value = crypto.randomUUID();
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value.trim();
+            const sessionId = document.getElementById('session_id').value;
+
+            if (document.getElementById('name').value === '') {
+                alert('Please enter your name');
+                return;
+            }
+
+            if (message === '') return;
+
+            const userName = document.getElementById('name').value;
+
+            appendMessage('user', userName, message);
+            messageInput.value = '';
+
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    user_name: userName,
+                    user_id: document.getElementById('user_id').value,
+                    user_prompt: message
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    alert(response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                appendMessage('assistant', 'Assistant', data.assistant_response, true, data.response_id);
+                updateFollowupQuestions(data.followup_questions);
+                document.getElementById('total_tokens').value = data.total_tokens;
+                document.getElementById('model_name').value = data.model;
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
+
+        function appendMessage(sender, senderName, message, isMarkdown = false, responseId = null) {
+            const chatWindow = document.getElementById('chat-window');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message', sender);
+
+            const senderNameElement = document.createElement('div');
+            senderNameElement.classList.add('message-sender');
+            senderNameElement.textContent = senderName + ':';
+
+            const messageText = document.createElement('div');
+            messageText.classList.add('message-text');
+            messageText.innerHTML = isMarkdown ? marked.parse(message) : message.replace(/\n|\r/g, '<br>');
+
+            messageElement.append(senderNameElement, messageText);
+
+            const icon = document.createElement('div');
+            icon.classList.add('message-icon');
+            if (sender === 'user') {
+                icon.innerHTML = '<i class="fas fa-user"></i>';
+            } else {
+                icon.innerHTML = '<i class="fas fa-robot"></i>';
+            }
+            messageElement.prepend(icon);
+
+            if (responseId) {
+                const feedbackContainer = document.createElement('div');
+                feedbackContainer.classList.add('feedback-container');
+                feedbackContainer.innerHTML = `
+                    <span class="feedback-buttons">
+                        <i class="fas fa-thumbs-up" onclick="sendFeedback('${responseId}', 1)"></i>
+                        <i class="fas fa-thumbs-down" onclick="sendFeedback('${responseId}', 0)"></i>
+                    </span>
+                `;
+                messageElement.appendChild(feedbackContainer);
+            }
+
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function startNewSession(event) {
+            event.preventDefault();
+            generateSessionId();
+            document.getElementById('total_tokens').value = '';
+            document.getElementById('model_name').value = '';
+            document.getElementById('chat-window').innerHTML = '';
+            document.getElementById('message').value = '';
+            document.getElementById('followup-questions').innerHTML = '';
+            document.getElementById('followup-container').visibility = 'hidden';
+        }
+
+        function sendFeedback(responseId, feedbackRating) {
+            const sessionId = document.getElementById('session_id').value;
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: responseId,
+                    session_id: sessionId,
+                    feedback_rating: feedbackRating
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    alert(response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.status);
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
+
+        function updateFollowupQuestions(followup_questions) {
+            const followupContainer = document.getElementById('followup-questions');
+            const followupContainerParent = document.getElementById('followup-container');
+            followupContainer.innerHTML = '';
+
+            for (let key in followup_questions) {
+                if (followup_questions.hasOwnProperty(key)) {
+                    const button = document.createElement('button');
+                    button.className = 'followup-question';
+                    button.textContent = followup_questions[key];
+                    button.onclick = () => {
+                        document.getElementById('message').value = followup_questions[key];
+                    };
+                    followupContainer.appendChild(button);
+                }
+            }
+
+            // Hide the followup container if there are no follow-up questions
+            followupContainerParent.style.visibility = followupContainer.children.length === 0 ? 'hidden' : 'visible';
+        }
+    </script>
+</body>
+
+</html>
