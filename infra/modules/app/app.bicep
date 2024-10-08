@@ -72,7 +72,7 @@ module appService './resources/appservice.bicep' = {
   params: {
     name: appServiceName
     location: location
-    tags: union(tags, { 'azd-service-name': 'webapp' })
+    tags: union(tags, { 'azd-service-name': 'app-core' })
     servicePlanId: appServicePlan.outputs.id
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     appSettings: appSettings
@@ -86,7 +86,7 @@ module appServiceStaging './resources/appservice-slot.bicep' = if (stagingSlotEn
   name: 'app-service-slot'
   params: {
     location: location
-    tags: union(tags, { 'azd-service-name': 'webapp-staging' })
+    tags: union(tags, { 'azd-service-name': 'app-core-staging' })
     appServiceName: appServiceName
     servicePlanId: appServicePlan.outputs.id
     appSettings: appSettings
