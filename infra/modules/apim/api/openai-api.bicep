@@ -27,8 +27,21 @@ resource apiVersionSet 'Microsoft.ApiManagement/service/apiVersionSets@2023-05-0
   parent: apimService
   properties: {
     displayName: apiDisplay
-    versioningScheme: 'Segment'
     description: apiDescription
+    versioningScheme: 'Header'
+    versionHeaderName: 'api-version'
+  }
+}
+
+resource namedValue 'Microsoft.ApiManagement/service/namedValues@2022-08-01' = {
+  name: keyVaultSecretName
+  parent: apimService
+  properties: {
+    displayName: keyVaultSecretName
+    secret: true
+    keyVault:{
+      secretIdentifier: '${keyVaultEndpoint}secrets/${keyVaultSecretName}'
+    }
   }
 }
 
@@ -43,6 +56,13 @@ resource backend 'Microsoft.ApiManagement/service/backends@2021-08-01' = {
       validateCertificateChain: false
       validateCertificateName: false
     }
+    credentials: {
+      header: {
+        'api-key': [
+          '{{${namedValue.name}}}'
+        ]
+      }
+   }
   }
 }
 
@@ -91,18 +111,6 @@ resource subscription 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-
     scope: product.id
     displayName: apiDisplay
     state: 'active'
-  }
-}
-
-resource namedValue 'Microsoft.ApiManagement/service/namedValues@2022-08-01' = {
-  name: keyVaultSecretName
-  parent: apimService
-  properties: {
-    displayName: keyVaultSecretName
-    secret: true
-    keyVault:{
-      secretIdentifier: '${keyVaultEndpoint}secrets/${keyVaultSecretName}'
-    }
   }
 }
 
