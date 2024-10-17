@@ -29,7 +29,7 @@ resource apiVersionSet 'Microsoft.ApiManagement/service/apiVersionSets@2023-05-0
     displayName: apiDisplay
     description: apiDescription
     versioningScheme: 'Header'
-    versionHeaderName: 'api-version'
+    versionHeaderName: 'apim-api-version'
   }
 }
 
