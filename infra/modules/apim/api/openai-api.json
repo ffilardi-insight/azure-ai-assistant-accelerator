@@ -34,7 +34,7 @@
                     {
                         "name": "api-version",
                         "in": "query",
-                        "description": "The API version.",
+                        "description": "The model API version.",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -203,7 +203,7 @@
                     {
                         "name": "api-version",
                         "in": "query",
-                        "description": "The API version.",
+                        "description": "The model API version.",
                         "required": true,
                         "schema": {
                             "type": "string"
