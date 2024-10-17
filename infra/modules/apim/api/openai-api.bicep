@@ -27,8 +27,9 @@ resource apiVersionSet 'Microsoft.ApiManagement/service/apiVersionSets@2023-05-0
   parent: apimService
   properties: {
     displayName: apiDisplay
-    versioningScheme: 'Segment'
     description: apiDescription
+    versioningScheme: 'Header'
+    versionHeaderName: 'api-version'
   }
 }
 
